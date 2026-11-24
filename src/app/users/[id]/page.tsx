@@ -7,7 +7,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { UsersService } from "@/api/userApi";
 import { RecordService } from "@/api/recordApi";
 import { clientAuthProvider } from "@/lib/authProvider";
-import { Record } from "@/types/record";
+import { Record, RecordStatus } from "@/types/record";
 import { User } from "@/types/user";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 type FormValues = {
     name: string;
     description: string;
+    status: RecordStatus;
 };
 
 export default function UserDetailPage() {
@@ -34,7 +35,7 @@ export default function UserDetailPage() {
         handleSubmit,
         formState: { errors, isSubmitting },
         reset,
-    } = useForm<FormValues>();
+    } = useForm<FormValues>({ defaultValues: { status: "PRIVATE" } });
 
     useEffect(() => {
         async function fetchData() {
@@ -65,6 +66,7 @@ export default function UserDetailPage() {
             const newRecord = await recordService.createRecord({
                 name: data.name,
                 description: data.description || undefined,
+                status: data.status,
             } as Record);
             setRecords((prev) => [...prev, newRecord]);
             reset();
@@ -130,6 +132,18 @@ export default function UserDetailPage() {
                                         />
                                     </div>
 
+                                    <div>
+                                        <Label htmlFor="status">Status</Label>
+                                        <select
+                                            id="status"
+                                            {...register("status")}
+                                            className="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                                        >
+                                            <option value="PRIVATE">Private</option>
+                                            <option value="PUBLIC">Public</option>
+                                        </select>
+                                    </div>
+
                                     <Button type="submit" disabled={isSubmitting}>
                                         {isSubmitting ? "Creating..." : "Add Record"}
                                     </Button>
@@ -160,6 +174,9 @@ export default function UserDetailPage() {
                                                     {record.description}
                                                 </p>
                                             )}
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                                Status: {record.status}
+                                            </p>
                                         </CardHeader>
                                     </Card>
                                 ))}
