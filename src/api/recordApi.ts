@@ -7,10 +7,20 @@ export class RecordService {
     constructor(private authProvider: AuthProvider) {
     }
 
+    private async collectRecords(path: string): Promise<Record[]> {
+        const records: Record[] = [];
+        let resource = await getHal(path, this.authProvider);
+        while (true) {
+            records.push(...mergeHalArray<Record>(resource.embeddedArray('records') || []));
+            const next = resource.link('next');
+            if (!next) break;
+            resource = await getHal(next.href, this.authProvider);
+        }
+        return records;
+    }
+
     async getRecords(): Promise<Record[]> {
-        const resource = await getHal('/records', this.authProvider);
-        const embedded = resource.embeddedArray('records') || [];
-        return mergeHalArray<Record>(embedded);
+        return this.collectRecords('/records');
     }
 
     async getRecordById(id: string): Promise<Record> {
@@ -19,10 +29,7 @@ export class RecordService {
     }
 
     async getRecordsByOwnedBy(owner: User): Promise<Record[]> {
-        const resource = await getHal(
-            `/records/search/findByOwnedBy?user=${owner.uri}`, this.authProvider);
-        const embedded = resource.embeddedArray('records') || [];
-        return mergeHalArray<Record>(embedded);
+        return this.collectRecords(`/records/search/findByOwnedBy?user=${owner.uri}`);
     }
 
     async createRecord(record: Record): Promise<Record> {

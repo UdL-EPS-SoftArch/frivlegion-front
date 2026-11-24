@@ -1,27 +1,39 @@
 import { When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
+import type { Page } from 'playwright';
+
+function recordCards(page: Page, name: string) {
+  return page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByRole('link', { name, exact: true }) });
+}
+
+function recordCard(page: Page, name: string) {
+  return recordCards(page, name).first();
+}
 
 When(/^I create a new record with name "([^"]*)" and description "([^"]*)" and status "([^"]*)"$/,
   async function (name: string, description: string, status: string) {
+    const before = await recordCards(this.page, name).count();
     await this.page.fill('#name', name);
     await this.page.fill('#description', description);
     await this.page.selectOption('#status', status);
     await this.page.click('button[type="submit"]');
+    await expect(recordCards(this.page, name)).toHaveCount(before + 1);
   });
 
 When(/^I create a new record with name "([^"]*)" and description "([^"]*)"$/,
   async function (name: string, description: string) {
+    const before = await recordCards(this.page, name).count();
     await this.page.fill('#name', name);
     await this.page.fill('#description', description);
     await this.page.click('button[type="submit"]');
+    await expect(recordCards(this.page, name)).toHaveCount(before + 1);
   });
 
 Then(/^I should see the record "([^"]*)" with status "([^"]*)" in the list$/,
   async function (name: string, status: string) {
-    const card = this.page
-      .locator('[data-slot="card"]')
-      .filter({ has: this.page.getByRole('link', { name, exact: true }) })
-      .first();
+    const card = recordCard(this.page, name);
     await expect(card).toBeVisible();
     await expect(card).toContainText(`Status: ${status}`);
   });
