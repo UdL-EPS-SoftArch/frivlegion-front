@@ -28,3 +28,22 @@ Feature: Create records from the user profile
     Then I should see the user page for "demo"
     When I create a new record with name "Default E2E Record" and description "No status chosen"
     Then I should see the record "Default E2E Record" with status "PRIVATE" in the list
+
+  Scenario: Owned records are paginated five at a time
+    Given I open the main page
+    When I click the button "Login"
+    And I enter "demo" and "password"
+    Then I should see the user page for "demo"
+    When I create a new record with name "Page Fill 1" and description "Filling page one" and status "PRIVATE"
+    And I create a new record with name "Page Fill 2" and description "Filling page one" and status "PRIVATE"
+    And I create a new record with name "Page Fill 3" and description "Filling page one" and status "PRIVATE"
+    And I create a new record with name "Page Fill 4" and description "Filling page one" and status "PRIVATE"
+    And I create a new record with name "Page Fill 5" and description "Filling page one" and status "PRIVATE"
+    And I create a new record with name "Page Fill 6" and description "Filling page two" and status "PRIVATE"
+    Then I should see at most 5 owned records on the page
+    And I should see the owned records page indicator "Page 1 of"
+    When I click the button "Next"
+    Then I should see the owned records page indicator "Page 2 of"
+    And I should see at most 5 owned records on the page
+    When I click the button "Previous"
+    Then I should see the owned records page indicator "Page 1 of"

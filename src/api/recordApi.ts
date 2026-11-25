@@ -3,24 +3,30 @@ import type { AuthProvider } from "@/lib/authProvider";
 import { Record } from "@/types/record";
 import {User} from "@/types/user";
 
+export type RecordPage = {
+    records: Record[];
+    totalPages: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+};
+
 export class RecordService {
     constructor(private authProvider: AuthProvider) {
     }
 
-    private async collectRecords(path: string): Promise<Record[]> {
-        const records: Record[] = [];
-        let resource = await getHal(path, this.authProvider);
-        while (true) {
-            records.push(...mergeHalArray<Record>(resource.embeddedArray('records') || []));
-            const next = resource.link('next');
-            if (!next) break;
-            resource = await getHal(next.href, this.authProvider);
-        }
-        return records;
+    private async fetchRecordPage(path: string): Promise<RecordPage> {
+        const resource = await getHal(path, this.authProvider);
+        const metadata = resource.original().page ?? {};
+        return {
+            records: mergeHalArray<Record>(resource.embeddedArray('records') || []),
+            totalPages: metadata.totalPages ?? 1,
+            hasPrevious: !!resource.link('prev'),
+            hasNext: !!resource.link('next'),
+        };
     }
 
-    async getRecords(): Promise<Record[]> {
-        return this.collectRecords('/records');
+    async getRecords(page: number = 0, size: number = 5): Promise<RecordPage> {
+        return this.fetchRecordPage(`/records?page=${page}&size=${size}`);
     }
 
     async getRecordById(id: string): Promise<Record> {
@@ -28,8 +34,9 @@ export class RecordService {
         return mergeHal<Record>(resource);
     }
 
-    async getRecordsByOwnedBy(owner: User): Promise<Record[]> {
-        return this.collectRecords(`/records/search/findByOwnedBy?user=${owner.uri}`);
+    async getRecordsByOwnedBy(owner: User, page: number = 0, size: number = 5): Promise<RecordPage> {
+        return this.fetchRecordPage(
+            `/records/search/findByOwnedBy?user=${owner.uri}&page=${page}&size=${size}&sort=id,desc`);
     }
 
     async createRecord(record: Record): Promise<Record> {

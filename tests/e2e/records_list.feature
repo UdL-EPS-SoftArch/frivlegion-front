@@ -23,3 +23,17 @@ Feature: Browse the records list
     Then I should see the records page
     And I should see the record "List Public Record" in the records list
     And I should see the record "List Private Record" in the records list
+
+  Scenario: The records list shows five records per page
+    When I create a new record with name "Extra Public 1" and description "Page fill" and status "PUBLIC"
+    And I create a new record with name "Extra Public 2" and description "Page fill" and status "PUBLIC"
+    And I create a new record with name "Extra Public 3" and description "Page fill" and status "PUBLIC"
+    And I create a new record with name "Extra Public 4" and description "Page fill" and status "PUBLIC"
+    And I create a new record with name "Extra Public 5" and description "Page fill" and status "PUBLIC"
+    When I click the link "Records"
+    Then I should see the records page
+    And I should see at most 5 records on the page
+    And I should see the page indicator "Page 1 of"
+    When I click the link "Next"
+    Then I should see the page indicator "Page 2 of"
+    And I should see at most 5 records on the page

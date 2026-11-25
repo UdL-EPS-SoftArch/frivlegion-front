@@ -22,10 +22,38 @@ function recordCard(page: Page, name: string) {
     .first();
 }
 
+function pageIndicator(page: Page) {
+  return page.getByText(/^Page \d+ of \d+$/).first();
+}
+
+async function gotoNextPage(page: Page) {
+  const nextPage = Number(new URL(page.url()).searchParams.get('page') ?? '0') + 1;
+  await page.getByRole('link', { name: 'Next', exact: true }).click();
+  await page.waitForURL(url => Number(url.searchParams.get('page') ?? '0') === nextPage);
+  await expect(pageIndicator(page)).toContainText(`Page ${nextPage + 1} of`);
+}
+
+async function recordOnAnyPage(page: Page, name: string): Promise<boolean> {
+  for (let i = 0; i < 100; i++) {
+    if (await recordCard(page, name).count() > 0) return true;
+    if (await page.getByRole('link', { name: 'Next', exact: true }).count() === 0) return false;
+    await gotoNextPage(page);
+  }
+  throw new Error('Too many pages while looking for a record');
+}
+
 Then(/^I should see the record "([^"]*)" in the records list$/, async function (name: string) {
-  await expect(recordCard(this.page, name)).toBeVisible();
+  expect(await recordOnAnyPage(this.page, name)).toBe(true);
 });
 
 Then(/^I should not see the record "([^"]*)" in the records list$/, async function (name: string) {
-  await expect(recordCard(this.page, name)).toHaveCount(0);
+  expect(await recordOnAnyPage(this.page, name)).toBe(false);
+});
+
+Then('I should see at most 5 records on the page', async function () {
+  await expect.poll(async () => this.page.locator('[data-slot="card"]').count()).toBeLessThanOrEqual(5);
+});
+
+Then(/^I should see the page indicator "([^"]*)"$/, async function (text: string) {
+  await expect(pageIndicator(this.page)).toContainText(text);
 });
