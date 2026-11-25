@@ -5,10 +5,13 @@ export interface AuthorityEntity {
 }
 
 export interface UserEntity {
+    id?: number | string;
     uri?: string;
     username: string;
     email?: string;
     password?: string;
+    createdAt?: string;
+    roles?: string[];
     authorities?: AuthorityEntity[];
 }
 
