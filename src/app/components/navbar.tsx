@@ -1,41 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/app/components/authentication";
 import Loginbar from "@/app/components/loginbar";
 
 export default function Navbar() {
     const pathname = usePathname();
-    const {user} = useAuth();
+    const { user, roles } = useAuth();
 
     const navLinks = [
-        {href: "/", label: "Home"},
-        {href: "/records", label: "Records"},
-        {href: "/users", label: "Users", roles: ["ROLE_USER"]}
+        { href: "/", label: "Catalog" },
+        { href: "/profile", label: "Profile", requiresAuth: true },
+        { href: "/records", label: "Records" },
+        { href: "/users", label: "Users", roles: ["ROLE_ADMIN"] },
     ];
 
     return (
-        <nav className="bg-white border-b shadow-sm dark:bg-black">
+        <nav className="bg-slate-950 border-b border-cyan-500/30 text-slate-100 shadow-md">
             <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-6">
-                <div className="flex gap-2 font-bold w-auto">
-                    <Image
-                        className="dark:invert"
-                        src="/next.svg"
-                        alt="Next.js logo"
-                        width={80}
-                        height={16}
-                        priority
-                    /> Template
-                </div>
+                <Link
+                    href="/"
+                    className="flex items-center gap-2 font-extrabold text-xl tracking-wider text-cyan-400"
+                >
+                    <span>FRIVLEGION</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 uppercase">
+                        Arcade
+                    </span>
+                </Link>
 
                 <div className="flex gap-4">
                     {navLinks
-                        .filter(({roles}) =>
-                            !roles || user?.authorities?.some(
-                                userAuth => roles.includes(userAuth.authority)))
-                        .map(({href, label}) => {
+                        .filter(({ requiresAuth, roles: requiredRoles }) => {
+                            if (requiresAuth && !user) return false;
+                            if (requiredRoles) {
+                                return requiredRoles.some((r) =>
+                                    roles.includes(r)
+                                );
+                            }
+                            return true;
+                        })
+                        .map(({ href, label }) => {
                             const active = pathname === href;
                             return (
                                 <Link
@@ -43,8 +48,8 @@ export default function Navbar() {
                                     href={href}
                                     className={
                                         active
-                                            ? "text-blue-600 font-medium border-b-2 border-blue-600 pb-1"
-                                            : "text-gray-600 hover:text-gray-900 transition"
+                                            ? "text-cyan-400 font-semibold border-b-2 border-cyan-400 pb-1"
+                                            : "text-slate-300 hover:text-white transition"
                                     }
                                 >
                                     {label}
@@ -54,9 +59,8 @@ export default function Navbar() {
                 </div>
 
                 <div className="ml-auto">
-                    <Loginbar/>
+                    <Loginbar />
                 </div>
-
             </div>
         </nav>
     );
