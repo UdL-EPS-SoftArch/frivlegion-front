@@ -17,7 +17,7 @@ Template for a Next.js (App Router) client consuming the [`spring-template`](htt
 
 ## Getting Started
 
-1. Start the Spring Boot backend ([`spring-template`](https://github.com/UdL-EPS-SoftArch/spring-template)) on `http://127.0.0.1:8080`.
+1. Start the Spring Boot backend ([`spring-template`](https://github.com/UdL-EPS-SoftArch/frivlegion-api)) on `http://127.0.0.1:8080`.
 2. Run the Next.js development server:
 
 ```bash
