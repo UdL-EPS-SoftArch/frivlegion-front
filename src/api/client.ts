@@ -2,6 +2,7 @@ export {
     API_BASE_URL,
     getHal,
     postHal,
+    patchHal,
     postJson,
     mergeHal,
     mergeHalArray,

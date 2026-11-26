@@ -288,6 +288,7 @@
     </div>
   </div>
 
+  <script src="/minigames/frivlegion-sdk.js"></script>
   <script>
     (function () {
       const GAME_ID = 'memory-match';
@@ -328,36 +329,26 @@
       }
 
       function emitScore(score) {
-        if (window.parent) {
-          window.parent.postMessage({
-            type: 'FRIVLEGION_SCORE',
-            gameId: GAME_ID,
-            score: score
-          }, '*');
+        if (window.FrivLegionSDK) {
+          window.FrivLegionSDK.submitScore(GAME_ID, score);
         }
       }
 
       function emitSaveState() {
-        if (window.parent) {
-          window.parent.postMessage({
-            type: 'FRIVLEGION_SAVE_STATE',
-            gameId: GAME_ID,
-            state: {
-              deck: deck,
-              matchedIndices: Array.from(matchedIndices),
-              moves: moves,
-              currentScore: currentScore,
-              bestScore: bestScore
-            }
-          }, '*');
+        if (window.FrivLegionSDK) {
+          window.FrivLegionSDK.saveState(GAME_ID, {
+            deck: deck,
+            matchedIndices: Array.from(matchedIndices),
+            moves: moves,
+            currentScore: currentScore,
+            bestScore: bestScore
+          });
         }
       }
 
-      window.addEventListener('message', function (event) {
-        const data = event.data;
-        if (!data || typeof data !== 'object') return;
-        if (data.type === 'FRIVLEGION_LOAD_STATE' && data.state) {
-          const st = data.state;
+      if (window.FrivLegionSDK) {
+        window.FrivLegionSDK.onLoadState(function (st) {
+          if (!st || typeof st !== 'object') return;
           if (typeof st.bestScore === 'number') {
             bestScore = Math.max(bestScore, st.bestScore);
           }
@@ -377,8 +368,8 @@
             renderGrid();
             updateHud();
           }
-        }
-      });
+        });
+      }
 
       function shuffle(array) {
         const arr = array.slice();

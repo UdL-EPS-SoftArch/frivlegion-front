@@ -238,6 +238,7 @@
     </div>
   </div>
 
+  <script src="/minigames/frivlegion-sdk.js"></script>
   <script>
     (function () {
       const GAME_ID = 'snake';
@@ -268,38 +269,30 @@
       let isGameOver = false;
 
       function emitScore(score) {
-        if (window.parent) {
-          window.parent.postMessage({
-            type: 'FRIVLEGION_SCORE',
-            gameId: GAME_ID,
-            score: score
-          }, '*');
+        if (window.FrivLegionSDK) {
+          window.FrivLegionSDK.submitScore(GAME_ID, score);
         }
       }
 
       function emitSaveState() {
-        if (window.parent) {
-          window.parent.postMessage({
-            type: 'FRIVLEGION_SAVE_STATE',
-            gameId: GAME_ID,
-            state: {
-              bestScore: bestScore,
-              lastScore: currentScore
-            }
-          }, '*');
+        if (window.FrivLegionSDK) {
+          window.FrivLegionSDK.saveState(GAME_ID, {
+            bestScore: bestScore,
+            lastScore: currentScore
+          });
         }
       }
 
-      window.addEventListener('message', function (event) {
-        const data = event.data;
-        if (!data || typeof data !== 'object') return;
-        if (data.type === 'FRIVLEGION_LOAD_STATE' && data.state) {
-          if (typeof data.state.bestScore === 'number' && data.state.bestScore > bestScore) {
-            bestScore = data.state.bestScore;
-            bestDisplay.textContent = String(bestScore);
+      if (window.FrivLegionSDK) {
+        window.FrivLegionSDK.onLoadState(function (state) {
+          if (state && typeof state === 'object') {
+            if (typeof state.bestScore === 'number' && state.bestScore > bestScore) {
+              bestScore = state.bestScore;
+              bestDisplay.textContent = String(bestScore);
+            }
           }
-        }
-      });
+        });
+      }
 
       function spawnFood() {
         const occupied = new Set(snake.map(function (seg) { return seg.x + ',' + seg.y; }));
