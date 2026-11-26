@@ -280,6 +280,7 @@
     </div>
   </div>
 
+  <script src="/minigames/frivlegion-sdk.js"></script>
   <script>
     (function () {
       const GAME_ID = 'tic-tac-toe';
@@ -313,43 +314,33 @@
       let isRoundOver = false;
 
       function emitScore(score) {
-        if (window.parent) {
-          window.parent.postMessage({
-            type: 'FRIVLEGION_SCORE',
-            gameId: GAME_ID,
-            score: score
-          }, '*');
+        if (window.FrivLegionSDK) {
+          window.FrivLegionSDK.submitScore(GAME_ID, score);
         }
       }
 
       function emitSaveState() {
-        if (window.parent) {
-          window.parent.postMessage({
-            type: 'FRIVLEGION_SAVE_STATE',
-            gameId: GAME_ID,
-            state: {
-              currentScore: currentScore,
-              wins: wins,
-              draws: draws,
-              losses: losses,
-              board: board
-            }
-          }, '*');
+        if (window.FrivLegionSDK) {
+          window.FrivLegionSDK.saveState(GAME_ID, {
+            currentScore: currentScore,
+            wins: wins,
+            draws: draws,
+            losses: losses,
+            board: board
+          });
         }
       }
 
-      window.addEventListener('message', function (event) {
-        const data = event.data;
-        if (!data || typeof data !== 'object') return;
-        if (data.type === 'FRIVLEGION_LOAD_STATE' && data.state) {
-          const st = data.state;
+      if (window.FrivLegionSDK) {
+        window.FrivLegionSDK.onLoadState(function (st) {
+          if (!st || typeof st !== 'object') return;
           if (typeof st.currentScore === 'number') currentScore = st.currentScore;
           if (typeof st.wins === 'number') wins = st.wins;
           if (typeof st.draws === 'number') draws = st.draws;
           if (typeof st.losses === 'number') losses = st.losses;
           updateHud();
-        }
-      });
+        });
+      }
 
       function updateHud() {
         scoreDisplay.textContent = String(currentScore);

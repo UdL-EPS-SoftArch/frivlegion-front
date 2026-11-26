@@ -86,6 +86,30 @@ export async function postHal(
     return halfred.parse(text ? JSON.parse(text) : {});
 }
 
+export async function patchHal(
+    path: string,
+    body: unknown,
+    authProvider?: { getAuth: () => Promise<string | null> }
+) {
+    const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
+    const authorization = authProvider ? await authProvider.getAuth() : null;
+    const res = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/hal+json, application/json",
+            ...(authorization ? { Authorization: authorization } : {}),
+        },
+        body: JSON.stringify(body),
+        cache: "no-store",
+    });
+    if (!res.ok) {
+        await handleErrorResponse(res, path);
+    }
+    const text = await res.text();
+    return halfred.parse(text ? JSON.parse(text) : {});
+}
+
 export async function postJson<T>(
     path: string,
     body: unknown,
